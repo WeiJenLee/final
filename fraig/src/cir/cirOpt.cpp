@@ -34,7 +34,7 @@ void
 CirMgr::sweep()
 {
    for(size_t i=gates_num[1]+1; i<=gates_num[0]; ++i)
-     if(_gates[i]->needSweep)
+     if(_gates[i] && _gates[i]->needSweep)
      {
        cout << "Sweeping: " << _gates[i]->getTypeStr() << "(" << _gates[i]->getID()
             << ") removed...\n";
@@ -60,7 +60,6 @@ CirMgr::optimize()
       DFSopt(_gates[_POs[i]]);
     }
   resetVisit();
-  dfsorder.clear();
   DFSsort();
 }
 
@@ -106,9 +105,12 @@ CirMgr::replacegate(CirGate* tmp, CirGate* next, bool inv)
     next = new CirConstGate();
   cout << "Simplifying: " << next->ID << " merging " << (inv ? "!" : "") << tmp->ID << "...\n";
   for(size_t i=0; i<tmp->_fanin.size(); ++i)
-    tmp->_fanin[i].getGate()->removed_fanout(tmp->ID);
+    tmp->_fanin[i].getGate()->removed_fanout(tmp->getID());
   for(size_t i=0; i<tmp->_fanout.size(); ++i)
-    tmp->_fanout[i].getGate()->replace_fanin(tmp->ID, next, inv);
+  {
+    tmp->_fanout[i].getGate()->replace_fanin(tmp->getID(), next, inv);
+    next->add_fanout(tmp->_fanout[i]);
+  }
   unsigned int deletenum = tmp->ID;
   _AIGs.erase(std::find(_AIGs.begin(), _AIGs.end(), deletenum));
   delete _gates[deletenum];

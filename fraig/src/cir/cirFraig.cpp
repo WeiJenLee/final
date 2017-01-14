@@ -73,9 +73,12 @@ CirMgr::strash()
       {
         cout << "Strashing: " << tmp->getID() << " merging " << dfsorder[i]->getID() << "...\n";
         for(size_t j=0; j<dfsorder[i]->_fanin.size(); ++j)
-          dfsorder[i]->_fanin[j].getGate()->removed_fanout(dfsorder[i]->ID);
+          dfsorder[i]->_fanin[j].getGate()->removed_fanout(dfsorder[i]->getID());
         for(size_t j=0; j<dfsorder[i]->_fanout.size(); ++j)
-          dfsorder[i]->_fanout[j].getGate()->replace_fanin(dfsorder[i]->ID, tmp, dfsorder[i]->_fanout[j].isinv());
+        {
+          dfsorder[i]->_fanout[j].getGate()->replace_fanin(dfsorder[i]->getID(), tmp, dfsorder[i]->_fanout[j].isinv());
+          tmp->add_fanout(dfsorder[i]->_fanout[j]);
+        }
         unsigned int deletenum = dfsorder[i]->getID();
         _AIGs.erase(std::find(_AIGs.begin(), _AIGs.end(), deletenum));
         delete _gates[deletenum];

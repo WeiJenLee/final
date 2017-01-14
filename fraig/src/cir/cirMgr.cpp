@@ -29,9 +29,9 @@ CirMgr* cirMgr = 0;
 static bool isinvert(unsigned int number)
 {
   if(number == 0)
-    return true;
-  if(number == 1)
     return false;
+  if(number == 1)
+    return true;
   return number/2 != (number+1)/2;
 }
 
@@ -312,8 +312,8 @@ CirMgr::readCircuit(const string& fileName)
        _gates[pin[2]/2]->_Flt = false;
      _gates[pin[0]/2]->add_fanin(pin[1]);
      _gates[pin[0]/2]->add_fanin(pin[2]);
-     _gates[pin[1]/2]->add_fanout(pin[0]/2, isinvert(pin[0]));
-     _gates[pin[2]/2]->add_fanout(pin[0]/2, isinvert(pin[0]));
+     _gates[pin[1]/2]->add_fanout(pin[0]/2, isinvert(pin[1]));
+     _gates[pin[2]/2]->add_fanout(pin[0]/2, isinvert(pin[2]));
    }
 
    DFSsort();
@@ -360,9 +360,15 @@ void
 CirMgr::printNetlist() const
 {
    cout << endl;
-   for (unsigned i = 0, n = dfsorder.size(); i < n; ++i) {
-      cout << "[" << i << "] ";
-      dfsorder[i]->printGate();
+   for (unsigned i = 0, n = 0; i < dfsorder.size();++n,  ++i)
+   {
+      if(dfsorder[i]->getTypeStr() != "UNDEF")
+      {
+        cout << "[" << n << "] ";
+        dfsorder[i]->printGate();
+      }
+      else
+        --n;
    }
 }
 

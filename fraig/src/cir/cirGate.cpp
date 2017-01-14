@@ -26,9 +26,9 @@ extern CirMgr *cirMgr;
 static bool isinvert(unsigned int number)
 {
   if(number == 0)
-    return true;
-  if(number == 1)
     return false;
+  if(number == 1)
+    return true;
   return number/2 != (number+1)/2;
 }
 static bool isUndef(CirGate* tmp){return tmp->getTypeStr() == "UNDEF";}
@@ -92,13 +92,21 @@ CirGate::add_fanin(unsigned int id)
 }
 
 void
-CirGate::replace_fanin(unsigned int deleteID, CirGate* tmp, bool invert)
+CirGate::removed_fanin(unsigned int id)
+{
+   for(size_t i=0; i<_fanin.size(); ++i)
+     if(_fanin[i].getID() == id)
+       _fanin.erase(_fanout.begin()+i);
+}
+
+void
+CirGate::replace_fanin(unsigned int _id, CirGate* tmp, bool invert)
 {
   pin pinin;
   pinin.setGate(tmp);
   pinin.setinv(invert);
   for(size_t i=0; i<_fanin.size(); ++i)
-    if(_fanin[i].getID() == deleteID)
+    if(_fanin[i].getID() == _id)
       _fanin[i] = pinin;
 }
 
@@ -109,6 +117,20 @@ CirGate::add_fanout(unsigned int id, bool invert)
    pinout.setGate(cirMgr->getGate(id));
    pinout.setinv(invert);
    _fanout.push_back(pinout);
+}
+
+void
+CirGate::add_fanout(pin newfan) { _fanout.push_back(newfan); }
+
+void
+CirGate::replace_fanout(unsigned int _id, CirGate* tmp, bool invert)
+{
+  pin pinin;
+  pinin.setGate(tmp);
+  pinin.setinv(invert);
+  for(size_t i=0; i<_fanout.size(); ++i)
+    if(_fanout[i].getID() == _id)
+      _fanout[i] = pinin;
 }
 
 void

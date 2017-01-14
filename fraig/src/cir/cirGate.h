@@ -89,8 +89,11 @@ public:
    void reportFanout(int level) const;
    void add_fanin(unsigned int);
    void add_fanout(unsigned int, bool);
+   void add_fanout(pin);
+   void removed_fanin(unsigned int);
    void removed_fanout(unsigned int);
    void replace_fanin(unsigned int, CirGate*, bool);
+   void replace_fanout(unsigned int, CirGate*, bool);
 
 private:
   void reportFaninhelp(CirGate*, int, int) const;
