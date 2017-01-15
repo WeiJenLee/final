@@ -172,7 +172,7 @@ public:
    friend class CirGate;
    CirUndefGate(unsigned int);
    ~CirUndefGate(){}
-   void printGate() const { cout << this->getTypeStr() << "\t" << ID << endl; }
+   void printGate() const { cout << this->getTypeStr() << " " << ID << endl; }
    bool isAig() const { return false; }
 
 private:

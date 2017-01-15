@@ -93,7 +93,7 @@ private:
    IdList _PIs, _POs, _AIGs;
    void DFS(CirGate*);
    void DFSopt(CirGate*);
-   void replacegate(CirGate*, CirGate*, bool);
+   void replacegate(CirGate*, CirGate*);
 };
 
 #endif // CIR_MGR_H

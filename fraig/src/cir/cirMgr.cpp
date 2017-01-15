@@ -26,14 +26,7 @@ using namespace std;
 /*   Global variable and enum  */
 /*******************************/
 CirMgr* cirMgr = 0;
-static bool isinvert(unsigned int number)
-{
-  if(number == 0)
-    return false;
-  if(number == 1)
-    return true;
-  return number/2 != (number+1)/2;
-}
+static bool isinvert(unsigned int number) {return number/2 != (number+1)/2;}
 
 enum CirParseError {
    EXTRA_SPACE,

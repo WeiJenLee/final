@@ -23,14 +23,7 @@ using namespace std;
 
 extern CirMgr *cirMgr;
 
-static bool isinvert(unsigned int number)
-{
-  if(number == 0)
-    return false;
-  if(number == 1)
-    return true;
-  return number/2 != (number+1)/2;
-}
+static bool isinvert(unsigned int number) {return number/2 != (number+1)/2;}
 static bool isUndef(CirGate* tmp){return tmp->getTypeStr() == "UNDEF";}
 
 unsigned int
