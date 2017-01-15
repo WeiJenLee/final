@@ -46,7 +46,7 @@ public:
    CirGate* getGate() const { return connectGate; }
    void setinv(bool invert) {inv = invert;}
    void setGate(CirGate* tmp) {connectGate = tmp;}
-   unsigned int getID() const;
+   const unsigned int getID() const;
    const string getTypeStr() const;
 
  private:
@@ -71,6 +71,7 @@ public:
      _Flt = true;
      _visit = false;
      needSweep = true;
+     value = 2;
    }
    virtual ~CirGate() {};
 
@@ -94,6 +95,7 @@ public:
    void removed_fanout(unsigned int);
    void replace_fanin(unsigned int, CirGate*, bool);
    void replace_fanout(unsigned int, CirGate*, bool);
+   int  simulate();
 
 private:
   void reportFaninhelp(CirGate*, int, int) const;
@@ -101,6 +103,7 @@ private:
 
 protected:
    bool _Flt, _visit, needSweep;
+   int value;
    unsigned int lineNo, ID;
    GateType _gateType;
    vector<pin> _fanin, _fanout;

@@ -63,7 +63,7 @@ private:
 void
 CirMgr::strash()
 {
-  HashMap<faninpin, CirGate*>* hash = new HashMap<faninpin, CirGate*>(5107);
+  HashMap<faninpin, CirGate*>* hash = new HashMap<faninpin, CirGate*>(gates_num[0] + gates_num[3]);
   for(size_t i=0; i<dfsorder.size(); ++i)
     if(dfsorder[i]->getTypeStr() == "AIG")
     {

@@ -26,7 +26,7 @@ extern CirMgr *cirMgr;
 static bool isinvert(unsigned int number) {return number/2 != (number+1)/2;}
 static bool isUndef(CirGate* tmp){return tmp->getTypeStr() == "UNDEF";}
 
-unsigned int
+const unsigned int
 pin::getID() const {return connectGate->ID;}
 
 const string
@@ -45,7 +45,6 @@ pin::getTypeStr() const
       return "CONST";
   }
 }
-
 /**************************************/
 /*   class CirGate member functions   */
 /**************************************/
@@ -232,4 +231,17 @@ CirGate::reportFanouthelp(CirGate* tmp, int level, int space) const
      cout << (tmp->_fanout[i].isinv() ? "!":"");
      reportFanouthelp(tmp->_fanout[i].getGate(), level-1, space+1);
    }
+}
+
+int
+CirGate::simulate()
+{
+  if(value != 2)
+    return value;
+  if(_fanin.size() == 1)
+    value = _fanin[0].isinv() ^ _fanin[0].getGate()->simulate();
+  else
+    value = (_fanin[0].isinv() ^ _fanin[0].getGate()->simulate()) &&
+                 (_fanin[1].isinv() ^ _fanin[1].getGate()->simulate());
+  return value;
 }

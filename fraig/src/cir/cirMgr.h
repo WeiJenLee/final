@@ -91,9 +91,17 @@ private:
    int gates_num[5];
    GateList _gates, dfsorder;
    IdList _PIs, _POs, _AIGs;
+   vector< vector<CirGate*> > FecGrp;
    void DFS(CirGate*);
    void DFSopt(CirGate*);
    void replacegate(CirGate*, CirGate*);
+   void resetSim()
+   {
+     for(size_t i=0; i<_gates.size(); ++i)
+       if(_gates[i])
+         _gates[i]->value = 2;
+   }
+   bool checkgrp();
 };
 
 #endif // CIR_MGR_H
