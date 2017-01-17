@@ -10,3 +10,19 @@ Now only fraig left. I have to find out how to use SAT engine first lol.
 If you have any idea, please share it with me.
 
 Wei-Jen
+
+
+============================================================================
+2017/01/17
+
+Hey guys,
+
+I successfully implemented all the function.
+You can just git pull from master to find the latest code.
+Part of code still need improvement,
+my efficiency is large behind ref program.
+
+In function "CIRSImulate" and "CIRFraig", there should be a better algorithm to find every FEC pair.
+If every has any idea, please share with me.
+
+Wei-Jen
