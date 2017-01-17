@@ -11,6 +11,7 @@
 #include <sstream>
 #include <stdarg.h>
 #include <cassert>
+#include <bitset>
 #include "cirGate.h"
 #include "cirMgr.h"
 #include "util.h"
@@ -52,10 +53,22 @@ void
 CirGate::reportGate() const
 {
   cout << "==================================================\n= "
-       << getTypeStr() << "(" << ID << "), line " << lineNo;
-  if(symbol[0])
-    cout << " \"" << symbol << "\"";
-  cout << "\n==================================================\n";
+       << getTypeStr() << "(" << ID << "), " << lineNo << endl
+       << "= FECs:";
+  if(getTypeStr() == "CONST" || getTypeStr() == "AIG")
+    for(size_t i=0; i<cirMgr->FecSize(Grp); ++i)
+      if(cirMgr->FecGate(Grp, i)->ID != ID)
+        cout << ((cirMgr->FecGate(Grp, i)->value & value) == 0 ? " !":" ")
+             << cirMgr->FecGate(Grp, i)->ID;
+  cout << "\n= Value: " << ((value >> 31) & 1) << ((value >> 30) & 1)
+       << ((value >> 29) & 1) << ((value >> 28) & 1);
+  for(size_t i=4; i<32; ++i)
+  {
+    if(i%4 == 0)
+      cout << "_";
+    cout << ((value >> (31-i)) & 1);
+  }
+  cout << " =\n==================================================\n";
 }
 
 void
@@ -178,9 +191,10 @@ CirConstGate::CirConstGate():CirGate(CONST_GATE, 0)
 {
    ID = 0;
    _Flt = false;
+   value = 0;
 }
 
-CirUndefGate::CirUndefGate(unsigned int _id):CirGate(UNDEF_GATE, 0) { ID = _id; }
+CirUndefGate::CirUndefGate(unsigned int _id):CirGate(UNDEF_GATE, 0) { ID = _id; value = 0;}
 
 string
 CirGate::getTypeStr() const
@@ -233,15 +247,33 @@ CirGate::reportFanouthelp(CirGate* tmp, int level, int space) const
    }
 }
 
-int
-CirGate::simulate()
+void
+CirGate::simulate(size_t const num)
 {
-  if(value != 2)
-    return value;
-  if(_fanin.size() == 1)
-    value = _fanin[0].isinv() ^ _fanin[0].getGate()->simulate();
-  else
-    value = (_fanin[0].isinv() ^ _fanin[0].getGate()->simulate()) &&
-                 (_fanin[1].isinv() ^ _fanin[1].getGate()->simulate());
-  return value;
+  for(size_t i=0; i<_fanin.size(); ++i)
+    if(!((_fanin[i]).getGate()->_visit))
+    {
+        (_fanin[i]).getGate()->_visit = true;
+        (_fanin[i]).getGate()->simulate(num);
+    }
+  if(getTypeStr() == "AIG")
+  {
+    unsigned int p1, p2;
+    if(_fanin[0].isinv())
+      p1 = 1 - (_fanin[0].getGate()->value >> num);
+    else
+      p1 = (_fanin[0].getGate()->value >> num);
+    if(_fanin[1].isinv())
+      p2 = 1 - (_fanin[1].getGate()->value >> num);
+    else
+      p2 = (_fanin[1].getGate()->value >> num);
+    addValue(p1&p2, num);
+  }
+  else if(getTypeStr() == "PO")
+  {
+    if(_fanin[0].isinv())
+      addValue(1 - (_fanin[0].getGate()->value >> num), num);
+    else
+      addValue((_fanin[0].getGate()->value >> num), num);
+  }
 }

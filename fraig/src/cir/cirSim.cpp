@@ -12,6 +12,8 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
+#include <cmath>
+#include <sstream>
 #include "cirMgr.h"
 #include "cirGate.h"
 #include "util.h"
@@ -35,8 +37,8 @@ using namespace std;
 void
 CirMgr::randomSim()
 {
-  size_t simNum = 0;
-  size_t simSuccessNum = 0;
+  size_t simNum = 0, simSuccessNum = 0, maxFail = (unsigned int)sqrt(gates_num[4]);
+  RandomNumGen gen;
   vector<CirGate*> fec;
   FecGrp.clear();
   for(size_t i=0; i<gates_num[0]; ++i)
@@ -44,17 +46,36 @@ CirMgr::randomSim()
       if(_gates[i]->getTypeStr() == "CONST" || _gates[i]->getTypeStr() == "AIG")
         fec.push_back(_gates[i]);
   FecGrp.push_back(fec);
-  while(simSuccessNum < 5 && simNum < gates_num[0]+gates_num[3])
+  for(size_t i=0; i<gates_num[1]; ++i)
   {
-    ++simNum;
-    resetSim();
-    RandomNumGen gen;
+    _gates[_PIs[i]]->addValue(gen(2), simNum);
+    _gates[_PIs[i]]->_visit = true;
+  }
+  if(_gates[0] && _gates[0]->getTypeStr() == "CONST")
+    _gates[0]->_visit = true;
+  for(size_t i=0; i<_POs.size(); ++i)
+  {
+    _gates[_POs[i]]->_visit = true;
+    _gates[_POs[i]]->simulate(simNum);
+  }
+  simNum++;
+  resetVisit();
+  while(simSuccessNum < 5 && simNum < 10*(gates_num[0]+gates_num[3]))
+  {
     for(size_t i=0; i<gates_num[1]; ++i)
-      _gates[_PIs[i]]->value = gen(2);
+    {
+      _gates[_PIs[i]]->addValue(gen(2), simNum);
+      _gates[_PIs[i]]->_visit = true;
+    }
     for(size_t i=0; i<_POs.size(); ++i)
-      _gates[_POs[i]]->simulate();
-    if(checkgrp())
+    {
+      _gates[_POs[i]]->_visit = true;
+      _gates[_POs[i]]->simulate(simNum);
+    }
+    if(!checkgrp())
       ++simSuccessNum;
+    ++simNum;
+    resetVisit();
   }
   cout << FecGrp.size();
   cout << simNum << " pattern simulated.\n";
@@ -65,7 +86,9 @@ void
 CirMgr::fileSim(ifstream& patternFile)
 {
   size_t simNum = 0;
+  unsigned int num;
   string data;
+  stringstream conv;
   vector<CirGate*> fec;
   FecGrp.clear();
   for(size_t i=0; i<gates_num[0]; ++i)
@@ -73,12 +96,45 @@ CirMgr::fileSim(ifstream& patternFile)
       if(_gates[i]->getTypeStr() == "CONST" || _gates[i]->getTypeStr() == "AIG")
         fec.push_back(_gates[i]);
   FecGrp.push_back(fec);
+  patternFile >> data;
+  if(data.length() != gates_num[1])
+  {
+    cout << "Error: Pattern(" << data << ") length(" << data.length()
+         << ") does not match the number of inputs(" << gates_num[1]
+         << ") in a circuit!!\n0 patterns simulated.\n";
+    return;
+  }
+  for(size_t i=0; i<gates_num[1]; ++i)
+  {
+    if(data[i] != '0' && data[i] != '1')
+    {
+      cerr << "Error: Pattern(" << data << ") contains a non-0/1 character(\'"
+           << data[i] << "\').\n0 patterns simulated.\n";
+      return;
+    }
+    else
+    {
+      if(data[i] == '0')
+        _gates[_PIs[i]]->addValue(0, simNum);
+      else
+        _gates[_PIs[i]]->addValue(1, simNum);
+      _gates[_PIs[i]]->_visit = true;
+    }
+  }
+  if(_gates[0] && _gates[0]->getTypeStr() == "CONST")
+    _gates[0]->_visit = true;
+  for(size_t i=0; i<_POs.size(); ++i)
+  {
+    _gates[_POs[i]]->_visit = true;
+    _gates[_POs[i]]->simulate(simNum);
+  }
+  resetVisit();
+  simNum++;
   while(patternFile >> data)
   {
-    resetSim();
     if(data.length() != gates_num[1])
     {
-      cout << "Error: Pattern(" << data << ") length(" << data.length()
+      cerr << "Error: Pattern(" << data << ") length(" << data.length()
            << ") does not match the number of inputs(" << gates_num[1]
            << ") in a circuit!!\n0 patterns simulated.\n";
       return;
@@ -92,12 +148,22 @@ CirMgr::fileSim(ifstream& patternFile)
         return;
       }
       else
-        _gates[_PIs[i]]->value = (int)data[i];
+      {
+        if(data[i] == '0')
+          _gates[_PIs[i]]->addValue(0, simNum);
+        else
+          _gates[_PIs[i]]->addValue(1, simNum);
+        _gates[_PIs[i]]->_visit = true;
+      }
+    }
+    for(size_t i=0; i<_POs.size(); ++i)
+    {
+      _gates[_POs[i]]->_visit = true;
+      _gates[_POs[i]]->simulate(simNum);
     }
     ++simNum;
-    for(size_t i=0; i<_POs.size(); ++i)
-      _gates[_POs[i]]->simulate();
     checkgrp();
+    resetVisit();
   }
   cout << simNum << " pattern simulated.\n";
   return;
@@ -117,6 +183,7 @@ CirMgr::checkgrp()
       if(FecGrp[i][j]->value != FecGrp[i][0]->value)
       {
         newGrp.push_back(FecGrp[i][j]);
+        FecGrp[i][j]->Grp = FecGrp.size();
         FecGrp[i].erase(FecGrp[i].begin()+j);
         --j;
       }

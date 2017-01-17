@@ -13,6 +13,7 @@
 #include <ctype.h>
 #include <cassert>
 #include <cstring>
+#include <queue>
 #include "cirMgr.h"
 #include "cirGate.h"
 #include "util.h"
@@ -225,7 +226,6 @@ CirMgr::readCircuit(const string& fileName)
      _AIGs.push_back(pin[0]/2);
      lineNo++;
    }
-
    int id;
    while(cir_file.getline(buf, 1024, '\n'))
    {
@@ -438,6 +438,47 @@ CirMgr::writeAag(ostream& outfile) const
 void
 CirMgr::writeGate(ostream& outfile, CirGate *g) const
 {
+  g->_visit = true;
+  writeDFS(g);
+  size_t in = 0, a = 0;
+  for(size_t j=0; j<_PIs.size(); ++j)
+    if(_gates[_PIs[j]]->_visit)
+      ++in;
+  for(size_t j=0; j<_AIGs.size(); ++j)
+    if(_gates[_AIGs[j]]->_visit)
+      ++a;
+  outfile << "aag " << ((a+in) >= g->ID ? a+in:g->ID) << " " << in << " " << gates_num[2]
+          << " 1 " << a << endl;
+
+  for(size_t i=0; i<_PIs.size(); ++i)
+    if(_gates[_PIs[i]]->_visit)
+      outfile << 2*_PIs[i] << endl;
+  outfile << 2*(g->ID) << endl;
+  CirGate* tmp;
+  for(size_t i=0; i<_AIGs.size(); ++i)
+    if(_gates[_AIGs[i]]->_visit)
+    {
+      outfile << 2*_AIGs[i] << " ";
+      tmp = _gates[_AIGs[i]];
+      unsigned int input_1 = tmp->_fanin[0].getID();
+      if(tmp->_fanin[0].isinv())
+        outfile << 2*input_1+1 << " ";
+      else
+        outfile << 2*input_1 << " ";
+      unsigned int input_2 = tmp->_fanin[1].getID();
+      if(tmp->_fanin[1].isinv())
+        outfile << 2*input_2+1 << endl;
+      else
+        outfile << 2*input_2 << endl;
+      }
+  for(size_t i=0; i<_PIs.size(); ++i)
+    if(_gates[_PIs[i]]->_visit)
+      if(_gates[_PIs[i]]->symbol.length() > 0)
+        outfile << "i" << i << " " << _gates[_PIs[i]]->symbol << endl;
+  outfile << "o0 " << g->ID << endl;
+  if(printCmd)
+    outfile << "c\nWrite gate (" << g->ID << ") by Wei-Jen (Wen) Lee\n";
+  resetVisit();
 }
 
 void
@@ -462,4 +503,18 @@ CirMgr::resetVisit() const
    for(size_t i=0; i<gates_num[0]+gates_num[3]+1; ++i)
      if(_gates[i])
        _gates[i]->_visit = false;
+}
+
+void
+CirMgr::writeDFS(CirGate* tmp) const
+{
+  for(size_t i=0; i<tmp->_fanin.size(); ++i)
+  {
+    CirGate* next = (tmp->_fanin[i]).getGate();
+    if(next && !(next->_visit))
+    {
+        next->_visit = true;
+        writeDFS(next);
+    }
+  }
 }

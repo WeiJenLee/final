@@ -82,26 +82,25 @@ CirMgr::DFSopt(CirGate* tmp)
   {
     if(tmp->_fanin[0].getTypeStr() == "CONST")
       if(tmp->_fanin[0].isinv())
-        replacegate(tmp, tmp->_fanin[1].getGate());
+        replacegate(tmp, tmp->_fanin[1].getGate(), tmp->_fanin[1].isinv());
       else
-        replacegate(tmp, _gates[0]);
+        replacegate(tmp, _gates[0], 0);
     else if(tmp->_fanin[1].getTypeStr() == "CONST")
       if(tmp->_fanin[1].isinv())
-        replacegate(tmp, tmp->_fanin[0].getGate());
+        replacegate(tmp, tmp->_fanin[0].getGate(), tmp->_fanin[0].isinv());
       else
-        replacegate(tmp, _gates[0]);
+        replacegate(tmp, _gates[0], 0);
     else if(tmp->_fanin[0].getID() == tmp->_fanin[1].getID())
       if(tmp->_fanin[0].isinv() == tmp->_fanin[1].isinv())
-        replacegate(tmp, tmp->_fanin[0].getGate());
+        replacegate(tmp, tmp->_fanin[0].getGate(), tmp->_fanin[0].isinv());
       else
-        replacegate(tmp, _gates[0]);
+        replacegate(tmp, _gates[0], 0);
   }
 }
 
 void
-CirMgr::replacegate(CirGate* tmp, CirGate* next)
+CirMgr::replacegate(CirGate* tmp, CirGate* next, bool inv)
 {
-  bool inv = (tmp->_fanin[0].isinv() && tmp->_fanin[1].isinv());
   if(!next)
     next = new CirConstGate();
   cout << "Simplifying: " << next->ID << " merging " << (inv ? "!" : "") << tmp->ID << "...\n";
@@ -109,8 +108,8 @@ CirMgr::replacegate(CirGate* tmp, CirGate* next)
     tmp->_fanin[i].getGate()->removed_fanout(tmp->getID());
   for(size_t i=0; i<tmp->_fanout.size(); ++i)
   {
-    tmp->_fanout[i].getGate()->replace_fanin(tmp->getID(), next, inv ^ tmp->_fanout[i].isinv());
-    next->add_fanout(tmp->_fanout[i].getID(), inv ^ tmp->_fanout[i].isinv());
+    tmp->_fanout[i].getGate()->replace_fanin(tmp->getID(), next, inv != tmp->_fanout[i].isinv());
+    next->add_fanout(tmp->_fanout[i].getID(), inv != tmp->_fanout[i].isinv());
   }
   unsigned int deletenum = tmp->ID;
   _AIGs.erase(std::find(_AIGs.begin(), _AIGs.end(), deletenum));

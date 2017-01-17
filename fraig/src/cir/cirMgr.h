@@ -84,24 +84,27 @@ public:
    void writeAag(ostream&) const;
    void writeGate(ostream&, CirGate*) const;
    void resetVisit() const;
+   size_t FecSize(size_t i) const
+   {
+     if(FecGrp.size() > i)
+       return FecGrp[i].size();
+     else
+       return 0;
+   }
+   CirGate* FecGate(size_t i, size_t j) const {return FecGrp[i][j];}
 
 private:
    ofstream           *_simLog;
    bool printCmd;
    int gates_num[5];
-   GateList _gates, dfsorder;
+   GateList _gates, dfsorder, AIGdfs;
    IdList _PIs, _POs, _AIGs;
    vector< vector<CirGate*> > FecGrp;
    void DFS(CirGate*);
    void DFSopt(CirGate*);
-   void replacegate(CirGate*, CirGate*);
-   void resetSim()
-   {
-     for(size_t i=0; i<_gates.size(); ++i)
-       if(_gates[i])
-         _gates[i]->value = 2;
-   }
+   void replacegate(CirGate*, CirGate*, bool);
    bool checkgrp();
+   void writeDFS(CirGate*) const;
 };
 
 #endif // CIR_MGR_H

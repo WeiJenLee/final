@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <cmath>
 #include "cirDef.h"
 #include "sat.h"
 
@@ -71,7 +72,7 @@ public:
      _Flt = true;
      _visit = false;
      needSweep = true;
-     value = 2;
+     Grp = 0;
    }
    virtual ~CirGate() {};
 
@@ -95,7 +96,13 @@ public:
    void removed_fanout(unsigned int);
    void replace_fanin(unsigned int, CirGate*, bool);
    void replace_fanout(unsigned int, CirGate*, bool);
-   int  simulate();
+   void simulate(size_t const);
+   void addValue(unsigned int i, size_t const num)
+   {
+     if(num > 31)
+       value = 0;
+     value += i*pow(2, num%32);
+   }
 
 private:
   void reportFaninhelp(CirGate*, int, int) const;
@@ -103,8 +110,7 @@ private:
 
 protected:
    bool _Flt, _visit, needSweep;
-   int value;
-   unsigned int lineNo, ID;
+   unsigned int lineNo, ID, Grp, value;
    GateType _gateType;
    vector<pin> _fanin, _fanout;
    string symbol;
