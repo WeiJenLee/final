@@ -49,6 +49,7 @@ public:
    void setGate(CirGate* tmp) {connectGate = tmp;}
    const unsigned int getID() const;
    const string getTypeStr() const;
+   const Var getSATID() const;
 
  private:
    bool inv;
@@ -124,6 +125,7 @@ protected:
    GateType _gateType;
    vector<pin> _fanin, _fanout;
    string symbol;
+   Var satID;
 };
 
 class CirAndGate: public CirGate
@@ -176,12 +178,13 @@ public:
 
    void printGate() const
    {
-     cout << this->getTypeStr() << " "
-          << 0 << endl;
+     if(!symbol.empty())
+       cout << this->getTypeStr() << " " << 0 << endl;
    }
    bool isAig() const { return false; }
 
 private:
+  bool print;
 };
 
 class CirUndefGate: public CirGate
