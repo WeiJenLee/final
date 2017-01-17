@@ -140,6 +140,8 @@ CirMgr::fraig()
     if(FecGrp[i].size() > 1)
       ++count;
   cout << "Updating by UNSAT... Total #FEC Group = " << count << endl;
+  strashCalled = simulateCalled = false;
+  DFSsort();
 }
 
 /********************************************/
