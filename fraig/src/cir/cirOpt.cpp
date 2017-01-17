@@ -33,6 +33,11 @@ using namespace std;
 void
 CirMgr::sweep()
 {
+   if(simulateCalled)
+   {
+     cerr << "Error: circuit has been simulated!! Do \"CIRFraig\" first!!\n";
+     return;
+   }
    for(size_t i=gates_num[1]+1; i<=gates_num[0]; ++i)
      if(_gates[i] && _gates[i]->needSweep)
      {
@@ -45,6 +50,7 @@ CirMgr::sweep()
        delete _gates[i];
        _gates[i] = NULL;
      }
+   strashCalled = false;
 }
 
 // Recursively simplifying from POs;
@@ -53,6 +59,11 @@ CirMgr::sweep()
 void
 CirMgr::optimize()
 {
+  if(simulateCalled)
+  {
+    cerr << "Error: circuit has been simulated!! Do \"CIRFraig\" first!!\n";
+    return;
+  }
   for(size_t i=0; i<_POs.size(); ++i)
     if(!(_gates[_POs[i]]->_visit))
     {
@@ -61,6 +72,7 @@ CirMgr::optimize()
     }
   resetVisit();
   DFSsort();
+  strashCalled = false;
 }
 
 /***************************************************/

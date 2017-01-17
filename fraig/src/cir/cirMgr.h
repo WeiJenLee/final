@@ -30,6 +30,7 @@ public:
    {
       for(size_t i=0; i<5; ++i)
         gates_num[i] = 0;
+      simulateCalled = false;
    }
    ~CirMgr()
    {
@@ -95,7 +96,7 @@ public:
 
 private:
    ofstream           *_simLog;
-   bool printCmd;
+   bool printCmd, simulateCalled, strashCalled;
    int gates_num[5];
    GateList _gates, dfsorder, AIGdfs;
    IdList _PIs, _POs, _AIGs;

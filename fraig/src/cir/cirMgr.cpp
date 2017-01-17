@@ -310,6 +310,7 @@ CirMgr::readCircuit(const string& fileName)
    }
 
    DFSsort();
+   strashCalled = false;
    return true;
 }
 
@@ -396,6 +397,19 @@ CirMgr::printFloatGates() const
 void
 CirMgr::printFECPairs() const
 {
+  bool firstinv = false;
+  for(size_t i=0, count = 0; i<FecGrp.size(); ++i)
+    if(FecGrp[i].size() > 1)
+    {
+      if(FecGrp[i][0]->valueInv)
+        firstinv = true;
+      cout << "[" << count << "] ";
+      for(size_t j=0; j<FecGrp[i].size(); ++j)
+        cout << (firstinv != FecGrp[i][j]->valueInv? "!":"") << FecGrp[i][j]->ID << " ";
+      cout << endl;
+      ++count;
+      firstinv = false;
+    }
 }
 
 void

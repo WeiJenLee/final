@@ -37,10 +37,11 @@ using namespace std;
 void
 CirMgr::randomSim()
 {
-  size_t simNum = 0, simSuccessNum = 0, maxFail = (unsigned int)sqrt(gates_num[4]);
+  size_t simNum = 0, simSuccessNum = 0, maxFail = 0;
   RandomNumGen gen;
   vector<CirGate*> fec;
   FecGrp.clear();
+  simulateCalled = true;
   for(size_t i=0; i <= gates_num[0]; ++i)
     if(_gates[i])
       if(_gates[i]->getTypeStr() == "CONST" || _gates[i]->getTypeStr() == "AIG")
@@ -67,7 +68,7 @@ CirMgr::randomSim()
     }
   simNum++;
   resetVisit();
-  while(simSuccessNum < 5 && simNum < 10*(gates_num[0]+gates_num[3]))
+  while(simSuccessNum < 5 && maxFail < gates_num[4])
   {
     for(size_t i=0; i<gates_num[1]; ++i)
     {
@@ -79,12 +80,14 @@ CirMgr::randomSim()
       _gates[_POs[i]]->_visit = true;
       _gates[_POs[i]]->simulate(simNum);
     }
-    if(!checkgrp())
+    if(checkgrp())
       ++simSuccessNum;
+    else
+      ++maxFail;
     ++simNum;
     resetVisit();
   }
-  cout << FecGrp.size();
+  cout << "MAX_FAIL = " << gates_num[4] << endl;
   cout << simNum << " pattern simulated.\n";
   return;
 }
@@ -93,11 +96,10 @@ void
 CirMgr::fileSim(ifstream& patternFile)
 {
   size_t simNum = 0;
-  unsigned int num;
   string data;
-  stringstream conv;
   vector<CirGate*> fec;
   FecGrp.clear();
+  simulateCalled = true;
   for(size_t i=0; i <= gates_num[0]; ++i)
     if(_gates[i])
       if(_gates[i]->getTypeStr() == "CONST" || _gates[i]->getTypeStr() == "AIG")

@@ -63,6 +63,11 @@ private:
 void
 CirMgr::strash()
 {
+  if(strashCalled)
+  {
+    cerr << "Error: strash operation has been performed!!\n";
+    return;
+  }
   HashMap<faninpin, CirGate*>* hash = new HashMap<faninpin, CirGate*>(gates_num[0] + gates_num[3]);
   for(size_t i=0; i<dfsorder.size(); ++i)
     if(dfsorder[i]->getTypeStr() == "AIG")
@@ -89,6 +94,7 @@ CirMgr::strash()
     }
   delete hash;
   DFSsort();
+  strashCalled = true;
 }
 
 void

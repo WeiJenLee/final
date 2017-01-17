@@ -109,9 +109,9 @@ public:
          value = 0;
      }
      if(valueInv)
-       value -= (1-i)*pow(2, num%32);
+       value -= (1-i)*(1 << (num%32));
      else
-       value += i*pow(2, num%32);
+       value += i*(1 << (num%32));
    }
 
 private:
