@@ -100,8 +100,91 @@ CirMgr::strash()
 void
 CirMgr::fraig()
 {
+  if(FecGrp.size() == 0)
+    return;
+  SatSolver solver;
+  solver.initialize();
+
+  for(size_t i=0; i<=gates_num[0]; ++i)
+    _gates[i]->satID = solver.newVar();
+  for(size_t i=gates_num[0]+1; i<_gates.size(); ++i)
+    _gates[i]->satID = _gates[i]->_fanin[0].getSATID();
+
+  for(size_t i=0; i<_AIGs.size(); ++i)
+    if(!(_gates[_AIGs[i]]->_visit))
+    {
+      _gates[_AIGs[i]]->_visit = true;
+      genProofModel(solver, _gates[_AIGs[i]]);
+    }
+  resetVisit();
+  bool result;
+  for(size_t i=0; i<FecGrp.size(); ++i)
+    if(FecGrp[i].size() > 1)
+      for(size_t j=0; j<FecGrp[i].size(); ++j)
+        for(size_t k=j+1; k<FecGrp[i].size(); ++k)
+        {
+          Var newV = solver.newVar();
+          solver.addXorCNF(newV, FecGrp[i][j]->satID, false, FecGrp[i][k]->satID,
+                           FecGrp[i][j]->value == FecGrp[i][k]->value);
+          solver.assumeRelease();
+          solver.assumeProperty(newV, true);  // k = 1
+          if(solver.assumpSolve())
+          {
+            FecReplace(FecGrp[i][j], FecGrp[i][k]);
+            FecGrp[i].erase(FecGrp[i].begin()+k);
+            --k;
+          }
+        }
+  size_t count = 0;
+  for(size_t i=0; i<FecGrp.size(); ++i)
+    if(FecGrp[i].size() > 1)
+      ++count;
+  cout << "Updating by UNSAT... Total #FEC Group = " << count << endl;
 }
 
 /********************************************/
 /*   Private member functions about fraig   */
 /********************************************/
+void
+CirMgr::genProofModel(SatSolver& s, CirGate* tmp)
+{
+  if(tmp->getTypeStr() == "PI" || tmp->getTypeStr() == "CONST")
+    return;
+  for(size_t i=0; i<tmp->_fanin.size(); ++i)
+  {
+    CirGate* next = (tmp->_fanin[i]).getGate();
+    if(next && !(next->_visit))
+    {
+        next->_visit = true;
+        genProofModel(s, next);
+    }
+  }
+  if(tmp->getTypeStr() == "AIG")
+    s.addAigCNF(tmp->satID, tmp->_fanin[0].getSATID(), tmp->_fanin[0].isinv(),
+                tmp->_fanin[1].getSATID(), tmp->_fanin[1].isinv());
+
+}
+
+void
+CirMgr::FecReplace(CirGate* fir, CirGate* sec)
+{
+  bool inv = (fir->value == sec->value);
+  if(sec->getTypeStr() == "CONST")
+  {
+    CirGate* tmp = fir;
+    fir = sec;
+    sec = tmp;
+  }
+  cout << "Fraig: " << fir->ID << " merging " << (inv ? "!" : "") << sec->ID << "...\n";
+  for(size_t i=0; i<sec->_fanin.size(); ++i)
+    sec->_fanin[i].getGate()->removed_fanout(sec->getID());
+  for(size_t i=0; i<sec->_fanout.size(); ++i)
+  {
+    sec->_fanout[i].getGate()->replace_fanin(sec->getID(), fir, inv != sec->_fanout[i].isinv());
+    fir->add_fanout(sec->_fanout[i].getID(), inv != sec->_fanout[i].isinv());
+  }
+  unsigned int deletenum = sec->ID;
+  _AIGs.erase(std::find(_AIGs.begin(), _AIGs.end(), deletenum));
+  delete _gates[deletenum];
+  _gates[deletenum] = NULL;
+}

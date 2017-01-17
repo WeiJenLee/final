@@ -46,6 +46,9 @@ pin::getTypeStr() const
       return "CONST";
   }
 }
+
+const Var
+pin::getSATID() const {return connectGate->satID;}
 /**************************************/
 /*   class CirGate member functions   */
 /**************************************/
@@ -191,6 +194,7 @@ CirConstGate::CirConstGate():CirGate(CONST_GATE, 0)
 {
    ID = 0;
    _Flt = false;
+   print = false;
 }
 
 CirUndefGate::CirUndefGate(unsigned int _id):CirGate(UNDEF_GATE, 0) { ID = _id;}
