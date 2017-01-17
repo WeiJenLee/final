@@ -41,11 +41,12 @@ CirMgr::randomSim()
   RandomNumGen gen;
   vector<CirGate*> fec;
   FecGrp.clear();
-  for(size_t i=0; i<gates_num[0]; ++i)
+  for(size_t i=0; i <= gates_num[0]; ++i)
     if(_gates[i])
       if(_gates[i]->getTypeStr() == "CONST" || _gates[i]->getTypeStr() == "AIG")
         fec.push_back(_gates[i]);
   FecGrp.push_back(fec);
+
   for(size_t i=0; i<gates_num[1]; ++i)
   {
     _gates[_PIs[i]]->addValue(gen(2), simNum);
@@ -58,6 +59,12 @@ CirMgr::randomSim()
     _gates[_POs[i]]->_visit = true;
     _gates[_POs[i]]->simulate(simNum);
   }
+  for(size_t i=gates_num[1]; i<=gates_num[0]; ++i)
+    if(_gates[i] && ((_gates[i]->value & 1) == 1))
+    {
+      _gates[i]->valueInv = true;
+      _gates[i]->value = -1;
+    }
   simNum++;
   resetVisit();
   while(simSuccessNum < 5 && simNum < 10*(gates_num[0]+gates_num[3]))
@@ -91,7 +98,7 @@ CirMgr::fileSim(ifstream& patternFile)
   stringstream conv;
   vector<CirGate*> fec;
   FecGrp.clear();
-  for(size_t i=0; i<gates_num[0]; ++i)
+  for(size_t i=0; i <= gates_num[0]; ++i)
     if(_gates[i])
       if(_gates[i]->getTypeStr() == "CONST" || _gates[i]->getTypeStr() == "AIG")
         fec.push_back(_gates[i]);
@@ -128,8 +135,14 @@ CirMgr::fileSim(ifstream& patternFile)
     _gates[_POs[i]]->_visit = true;
     _gates[_POs[i]]->simulate(simNum);
   }
-  resetVisit();
+  for(size_t i=gates_num[1]; i<=gates_num[0]; ++i)
+    if(_gates[i] && ((_gates[i]->value & 1) == 1))
+    {
+      _gates[i]->valueInv = true;
+      _gates[i]->value = -1;
+    }
   simNum++;
+  resetVisit();
   while(patternFile >> data)
   {
     if(data.length() != gates_num[1])
@@ -176,18 +189,19 @@ bool
 CirMgr::checkgrp()
 {
   size_t row = FecGrp.size();
+  vector<CirGate*> newGrp;
   for(size_t i=0; i<row; ++i)
   {
-    vector<CirGate*> newGrp;
+    newGrp.clear();
     for(size_t j=1; j<FecGrp[i].size(); ++j)
-      if(FecGrp[i][j]->value != FecGrp[i][0]->value)
+      if(FecGrp[i][j]->value != FecGrp[i][0]->value && FecGrp[i][j]->value != ~(FecGrp[i][0]->value))
       {
         newGrp.push_back(FecGrp[i][j]);
         FecGrp[i][j]->Grp = FecGrp.size();
         FecGrp[i].erase(FecGrp[i].begin()+j);
         --j;
       }
-    if(newGrp.size() > 0)
+    if(!newGrp.empty())
       FecGrp.push_back(newGrp);
   }
   if(row == FecGrp.size())

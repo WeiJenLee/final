@@ -54,7 +54,7 @@ CirGate::reportGate() const
 {
   cout << "==================================================\n= "
        << getTypeStr() << "(" << ID << "), " << lineNo << endl
-       << "= FECs:";
+       << "= FECs: ";
   if(getTypeStr() == "CONST" || getTypeStr() == "AIG")
     for(size_t i=0; i<cirMgr->FecSize(Grp); ++i)
       if(cirMgr->FecGate(Grp, i)->ID != ID)
@@ -191,10 +191,9 @@ CirConstGate::CirConstGate():CirGate(CONST_GATE, 0)
 {
    ID = 0;
    _Flt = false;
-   value = 0;
 }
 
-CirUndefGate::CirUndefGate(unsigned int _id):CirGate(UNDEF_GATE, 0) { ID = _id; value = 0;}
+CirUndefGate::CirUndefGate(unsigned int _id):CirGate(UNDEF_GATE, 0) { ID = _id;}
 
 string
 CirGate::getTypeStr() const

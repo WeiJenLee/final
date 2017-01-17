@@ -73,6 +73,8 @@ public:
      _visit = false;
      needSweep = true;
      Grp = 0;
+     value = 0;
+     valueInv = false;
    }
    virtual ~CirGate() {};
 
@@ -100,8 +102,16 @@ public:
    void addValue(unsigned int i, size_t const num)
    {
      if(num > 31)
-       value = 0;
-     value += i*pow(2, num%32);
+     {
+       if(valueInv)
+         value = -1;
+       else
+         value = 0;
+     }
+     if(valueInv)
+       value -= (1-i)*pow(2, num%32);
+     else
+       value += i*pow(2, num%32);
    }
 
 private:
@@ -109,7 +119,7 @@ private:
   void reportFanouthelp(CirGate*, int, int) const;
 
 protected:
-   bool _Flt, _visit, needSweep;
+   bool _Flt, _visit, needSweep, valueInv;
    unsigned int lineNo, ID, Grp, value;
    GateType _gateType;
    vector<pin> _fanin, _fanout;
