@@ -113,8 +113,6 @@ CirMgr::DFSopt(CirGate* tmp)
 void
 CirMgr::replacegate(CirGate* tmp, CirGate* next, bool inv)
 {
-  if(!next)
-    next = new CirConstGate();
   cout << "Simplifying: " << next->ID << " merging " << (inv ? "!" : "") << tmp->ID << "...\n";
   for(size_t i=0; i<tmp->_fanin.size(); ++i)
     tmp->_fanin[i].getGate()->removed_fanout(tmp->getID());

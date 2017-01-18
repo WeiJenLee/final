@@ -118,23 +118,9 @@ CirMgr::fraig()
     }
   resetVisit();
   bool result;
-  for(size_t i=0; i<FecGrp.size(); ++i)
-    if(FecGrp[i].size() > 1)
-      for(size_t j=0; j<FecGrp[i].size(); ++j)
-        for(size_t k=j+1; k<FecGrp[i].size(); ++k)
-        {
-          Var newV = solver.newVar();
-          solver.addXorCNF(newV, FecGrp[i][j]->satID, false, FecGrp[i][k]->satID,
-                           FecGrp[i][j]->value == FecGrp[i][k]->value);
-          solver.assumeRelease();
-          solver.assumeProperty(newV, true);  // k = 1
-          if(solver.assumpSolve())
-          {
-            FecReplace(FecGrp[i][j], FecGrp[i][k]);
-            FecGrp[i].erase(FecGrp[i].begin()+k);
-            --k;
-          }
-        }
+  for(size_t i=0; i<_gates.size(); ++i)
+    if(_gates[i] && FecGrp[_gates[i]->Grp].size() > 1)
+      trymerge(solver, _gates[i]);
   size_t count = 0;
   for(size_t i=0; i<FecGrp.size(); ++i)
     if(FecGrp[i].size() > 1)
@@ -170,7 +156,7 @@ CirMgr::genProofModel(SatSolver& s, CirGate* tmp)
 void
 CirMgr::FecReplace(CirGate* fir, CirGate* sec)
 {
-  bool inv = (fir->value == sec->value);
+  bool inv = (fir->value != sec->value);
   if(sec->getTypeStr() == "CONST")
   {
     CirGate* tmp = fir;
@@ -179,7 +165,7 @@ CirMgr::FecReplace(CirGate* fir, CirGate* sec)
   }
   cout << "Fraig: " << fir->ID << " merging " << (inv ? "!" : "") << sec->ID << "...\n";
   for(size_t i=0; i<sec->_fanin.size(); ++i)
-    sec->_fanin[i].getGate()->removed_fanout(sec->getID());
+    sec->_fanin[i].getGate()->replace_fanout(sec->getID(), fir);
   for(size_t i=0; i<sec->_fanout.size(); ++i)
   {
     sec->_fanout[i].getGate()->replace_fanin(sec->getID(), fir, inv != sec->_fanout[i].isinv());
@@ -189,4 +175,24 @@ CirMgr::FecReplace(CirGate* fir, CirGate* sec)
   _AIGs.erase(std::find(_AIGs.begin(), _AIGs.end(), deletenum));
   delete _gates[deletenum];
   _gates[deletenum] = NULL;
+}
+
+void
+CirMgr::trymerge(SatSolver& solver, CirGate* g)
+{
+  for(size_t i=0; i<FecGrp[g->Grp].size(); ++i)
+    if(FecGrp[g->Grp][i] != g)
+    {
+      Var newV = solver.newVar();
+      solver.addXorCNF(newV, g->satID, false, FecGrp[g->Grp][i]->satID,
+                       g->value == FecGrp[g->Grp][i]->value);
+      solver.assumeRelease();
+      solver.assumeProperty(newV, true);
+      if(solver.assumpSolve())
+      {
+        FecReplace(g, FecGrp[g->Grp][i]);
+        FecGrp[g->Grp].erase(FecGrp[g->Grp].begin()+i);
+        --i;
+      }
+    }
 }

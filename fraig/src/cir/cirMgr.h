@@ -106,6 +106,23 @@ private:
    void replacegate(CirGate*, CirGate*, bool);
    bool checkgrp();
    void writeDFS(CirGate*) const;
+   void FecReplace(CirGate*, CirGate*);
+   void genProofModel(SatSolver&, CirGate*);
+   void trymerge(SatSolver&, CirGate*);
+   void valuereset()
+   {
+     for(size_t i=0; i<_gates.size(); ++i)
+     {
+       if(_gates[i])
+         _gates[i]->value = 0;
+     }
+   }
+   void resetNeepsweep()
+   {
+     for(size_t i=0; i<_gates.size(); ++i)
+       if(_gates[i])
+         _gates[i]->needSweep = true;
+   }
 };
 
 #endif // CIR_MGR_H

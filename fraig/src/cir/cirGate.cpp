@@ -131,14 +131,11 @@ void
 CirGate::add_fanout(pin newfan) { _fanout.push_back(newfan); }
 
 void
-CirGate::replace_fanout(unsigned int _id, CirGate* tmp, bool invert)
+CirGate::replace_fanout(unsigned int _id, CirGate* tmp)
 {
-  pin pinin;
-  pinin.setGate(tmp);
-  pinin.setinv(invert);
   for(size_t i=0; i<_fanout.size(); ++i)
     if(_fanout[i].getID() == _id)
-      _fanout[i] = pinin;
+      _fanout[i].setGate(tmp);
 }
 
 void
@@ -263,20 +260,20 @@ CirGate::simulate(size_t const num)
   {
     unsigned int p1, p2;
     if(_fanin[0].isinv())
-      p1 = 1 - (_fanin[0].getGate()->value >> num);
+      p1 = 1 - (1 & (_fanin[0].getGate()->value >> (num%32)));
     else
-      p1 = (_fanin[0].getGate()->value >> num);
+      p1 = (1 & (_fanin[0].getGate()->value >> (num%32)));
     if(_fanin[1].isinv())
-      p2 = 1 - (_fanin[1].getGate()->value >> num);
+      p2 = 1 - (1 & (_fanin[1].getGate()->value >> (num%32)));
     else
-      p2 = (_fanin[1].getGate()->value >> num);
+      p2 = (1 & (_fanin[1].getGate()->value >> (num%32)));
     addValue(p1&p2, num);
   }
   else if(getTypeStr() == "PO")
   {
     if(_fanin[0].isinv())
-      addValue(1 - (_fanin[0].getGate()->value >> num), num);
+      addValue(1 - (_fanin[0].getGate()->value >> (num%32)), num);
     else
-      addValue((_fanin[0].getGate()->value >> num), num);
+      addValue((_fanin[0].getGate()->value >> (num%32)), num);
   }
 }

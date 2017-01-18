@@ -42,6 +42,7 @@ CirMgr::randomSim()
   vector<CirGate*> fec;
   FecGrp.clear();
   simulateCalled = true;
+  valuereset();
   for(size_t i=0; i <= gates_num[0]; ++i)
     if(_gates[i])
       if(_gates[i]->getTypeStr() == "CONST" || _gates[i]->getTypeStr() == "AIG")
@@ -68,7 +69,7 @@ CirMgr::randomSim()
     }
   simNum++;
   resetVisit();
-  while(simSuccessNum < 5 && maxFail < gates_num[4])
+  while(simSuccessNum < 3 && maxFail < 5)
   {
     for(size_t i=0; i<gates_num[1]; ++i)
     {
@@ -80,15 +81,16 @@ CirMgr::randomSim()
       _gates[_POs[i]]->_visit = true;
       _gates[_POs[i]]->simulate(simNum);
     }
+    ++simNum;
     if(checkgrp())
       ++simSuccessNum;
     else
       ++maxFail;
-    ++simNum;
     resetVisit();
   }
   cout << "MAX_FAIL = " << gates_num[4] << endl;
   cout << simNum << " pattern simulated.\n";
+  strashCalled = false;
   return;
 }
 
@@ -100,6 +102,7 @@ CirMgr::fileSim(ifstream& patternFile)
   vector<CirGate*> fec;
   FecGrp.clear();
   simulateCalled = true;
+  valuereset();
   for(size_t i=0; i <= gates_num[0]; ++i)
     if(_gates[i])
       if(_gates[i]->getTypeStr() == "CONST" || _gates[i]->getTypeStr() == "AIG")
@@ -135,7 +138,7 @@ CirMgr::fileSim(ifstream& patternFile)
   for(size_t i=0; i<_POs.size(); ++i)
   {
     _gates[_POs[i]]->_visit = true;
-    _gates[_POs[i]]->simulate(simNum);
+    _gates[_POs[i]]->simulate(simNum%32);
   }
   for(size_t i=gates_num[1]; i<=gates_num[0]; ++i)
     if(_gates[i] && ((_gates[i]->value & 1) == 1))
@@ -181,6 +184,7 @@ CirMgr::fileSim(ifstream& patternFile)
     resetVisit();
   }
   cout << simNum << " pattern simulated.\n";
+  strashCalled = false;
   return;
 }
 

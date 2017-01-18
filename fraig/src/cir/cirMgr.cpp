@@ -177,7 +177,7 @@ CirMgr::readCircuit(const string& fileName)
    _gates.resize(gates_num[0]+gates_num[3]+1);
    colNo = 0;
    lineNo++;
-
+   _gates[0] = new CirConstGate();
    for(size_t i=0; i<gates_num[1]; ++i)
    {
      if(!cir_file.getline(buf, 1024, '\n'))
@@ -218,8 +218,7 @@ CirMgr::readCircuit(const string& fileName)
          return parseError(ILLEGAL_NUM);
        pin[j] = errInt;
        if(errInt/2 == 0)
-         if(!_gates[0])
-           _gates[0] = new CirConstGate();
+           _gates[0]->symbol = "print";
      }
      colNo = 0;
      _gates[pin[0]/2] = new CirAndGate(pin[0], lineNo);
@@ -276,7 +275,7 @@ CirMgr::readCircuit(const string& fileName)
      else
      {
        if(errInt == 0)
-         _gates[0] = new CirConstGate();
+         _gates[0]->symbol = "print";
        else
          _gates[errInt/2] = new CirUndefGate(errInt);
      }
@@ -330,6 +329,7 @@ Circuit Statistics
 void
 CirMgr::DFSsort()
 {
+  resetNeepsweep();
   dfsorder.clear();
    for(size_t i=0; i<_POs.size(); ++i)
      if(!(_gates[_POs[i]]->_visit))

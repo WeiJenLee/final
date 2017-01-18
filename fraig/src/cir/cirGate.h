@@ -98,11 +98,11 @@ public:
    void removed_fanin(unsigned int);
    void removed_fanout(unsigned int);
    void replace_fanin(unsigned int, CirGate*, bool);
-   void replace_fanout(unsigned int, CirGate*, bool);
+   void replace_fanout(unsigned int, CirGate*);
    void simulate(size_t const);
    void addValue(unsigned int i, size_t const num)
    {
-     if(num > 31)
+     if(num%32 == 0)
      {
        if(valueInv)
          value = -1;

@@ -26,3 +26,15 @@ In function "CIRSImulate" and "CIRFraig", there should be a better algorithm to 
 If every has any idea, please share with me.
 
 Wei-Jen
+
+
+============================================================================
+2017/01/18
+
+Hey guys,
+
+I have finished my final project. All the function are correctly(?) implemented.
+
+However, my running time is longer than proffesor's ref profram, especially in function simulated. If you are interested in improving this program, feel free to pull my program and make some modification.
+
+Wei-Jen
